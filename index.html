@@ -1,0 +1,4842 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>FX Project — GitHub Manager</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+<style>
+:root{
+    --bg:#070707;
+    --bg2:#0b0b0b;
+    --panel:#0e0e0e;
+    --panel2:#111111;
+    --panel3:#151515;
+
+    --line:#242424;
+    --line2:#303030;
+
+    --text:#f4f4f4;
+    --text2:#c8c8c8;
+    --muted:#858585;
+
+    --white:#ffffff;
+    --black:#000000;
+
+    --success:#a7f3d0;
+    --success-bg:#071c13;
+
+    --danger:#ffb4b4;
+    --danger-bg:#210909;
+
+    --warning:#ffe2a6;
+    --warning-bg:#201706;
+
+    --shadow:
+        0 30px 80px rgba(0,0,0,.45),
+        0 8px 30px rgba(0,0,0,.25);
+
+    --radius:18px;
+    --radius-sm:12px;
+}
+
+*{
+    box-sizing:border-box;
+}
+
+html{
+    scroll-behavior:smooth;
+}
+
+body{
+    margin:0;
+    min-height:100vh;
+    color:var(--text);
+    background:
+        radial-gradient(circle at 50% -10%, #1b1b1b 0, transparent 32%),
+        linear-gradient(180deg,#090909 0%,#050505 100%);
+    font-family:
+        Inter,
+        ui-sans-serif,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+}
+
+body::before{
+    content:"";
+    position:fixed;
+    inset:0;
+    pointer-events:none;
+    opacity:.22;
+    background-image:
+        linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),
+        linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px);
+    background-size:32px 32px;
+    mask-image:linear-gradient(to bottom,#000,transparent 90%);
+}
+
+button,
+input,
+textarea,
+select{
+    font:inherit;
+}
+
+button{
+    cursor:pointer;
+}
+
+svg{
+    width:18px;
+    height:18px;
+    display:block;
+    flex:none;
+}
+
+/* =========================
+   APP
+========================= */
+
+.app{
+    width:min(1180px,calc(100% - 28px));
+    margin:0 auto;
+    padding:28px 0 50px;
+}
+
+/* =========================
+   HEADER
+========================= */
+
+.topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:20px;
+    padding:18px 20px;
+
+    border:1px solid var(--line);
+    border-radius:20px;
+
+    background:
+        linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,.015)),
+        rgba(10,10,10,.86);
+
+    box-shadow:var(--shadow);
+    backdrop-filter:blur(18px);
+    -webkit-backdrop-filter:blur(18px);
+
+    position:sticky;
+    top:14px;
+    z-index:50;
+}
+
+.brand{
+    display:flex;
+    align-items:center;
+    gap:13px;
+    min-width:0;
+}
+
+.brand-mark{
+    width:42px;
+    height:42px;
+    display:grid;
+    place-items:center;
+
+    border:1px solid #383838;
+    border-radius:12px;
+
+    background:#111;
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.07),
+        0 8px 20px rgba(0,0,0,.25);
+}
+
+.brand-mark svg{
+    width:21px;
+    height:21px;
+}
+
+.brand-text{
+    min-width:0;
+}
+
+.brand-title{
+    font-size:18px;
+    font-weight:800;
+    letter-spacing:-.03em;
+}
+
+.brand-subtitle{
+    color:var(--muted);
+    font-size:11px;
+    margin-top:2px;
+    text-transform:uppercase;
+    letter-spacing:.13em;
+}
+
+.connection{
+    display:flex;
+    align-items:center;
+    gap:8px;
+
+    padding:9px 12px;
+    border:1px solid var(--line);
+    border-radius:999px;
+
+    background:#0c0c0c;
+    color:var(--muted);
+
+    font-size:12px;
+    white-space:nowrap;
+}
+
+.connection-dot{
+    width:7px;
+    height:7px;
+    border-radius:50%;
+    background:#555;
+    box-shadow:0 0 0 3px rgba(255,255,255,.03);
+}
+
+.connection.online{
+    color:#d9d9d9;
+}
+
+.connection.online .connection-dot{
+    background:#fff;
+    box-shadow:0 0 0 3px rgba(255,255,255,.08);
+}
+
+/* =========================
+   HERO
+========================= */
+
+.hero{
+    padding:54px 8px 30px;
+}
+
+.eyebrow{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+
+    color:#a8a8a8;
+    font-size:11px;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:.16em;
+}
+
+.eyebrow-line{
+    width:22px;
+    height:1px;
+    background:#666;
+}
+
+.hero h1{
+    margin:13px 0 10px;
+
+    font-size:clamp(34px,6vw,62px);
+    line-height:.98;
+    letter-spacing:-.055em;
+    font-weight:850;
+}
+
+.hero p{
+    max-width:680px;
+    margin:0;
+
+    color:#8d8d8d;
+    font-size:14px;
+    line-height:1.7;
+}
+
+/* =========================
+   MODE SWITCH
+========================= */
+
+.mode-switch{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:4px;
+
+    padding:4px;
+
+    border:1px solid var(--line);
+    border-radius:14px;
+
+    background:#0b0b0b;
+
+    margin-bottom:16px;
+}
+
+.mode-btn{
+    min-height:46px;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:9px;
+
+    border:0;
+    border-radius:10px;
+
+    background:transparent;
+    color:#777;
+
+    font-size:13px;
+    font-weight:750;
+
+    transition:.2s ease;
+}
+
+.mode-btn:hover{
+    color:#bbb;
+    background:#111;
+}
+
+.mode-btn.active{
+    color:#080808;
+    background:#f2f2f2;
+
+    box-shadow:
+        0 1px 0 rgba(255,255,255,.5) inset,
+        0 7px 20px rgba(0,0,0,.3);
+}
+
+/* =========================
+   PANEL
+========================= */
+
+.panel{
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+
+    background:
+        linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,.012)),
+        rgba(10,10,10,.94);
+
+    box-shadow:var(--shadow);
+    overflow:hidden;
+}
+
+.panel-head{
+    padding:20px 22px;
+
+    border-bottom:1px solid var(--line);
+
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:16px;
+}
+
+.panel-title{
+    font-size:14px;
+    font-weight:800;
+    letter-spacing:-.01em;
+}
+
+.panel-description{
+    margin-top:4px;
+    color:#777;
+    font-size:11px;
+    line-height:1.5;
+}
+
+.panel-body{
+    padding:22px;
+}
+
+/* =========================
+   FORM
+========================= */
+
+.form-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:14px;
+}
+
+.form-grid.full{
+    grid-template-columns:1fr;
+}
+
+.field{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+}
+
+.field-label{
+    color:#a2a2a2;
+    font-size:11px;
+    font-weight:700;
+    letter-spacing:.04em;
+}
+
+.input,
+.textarea,
+.select{
+    width:100%;
+
+    border:1px solid #272727;
+    outline:none;
+
+    border-radius:12px;
+
+    background:#0b0b0b;
+    color:#eee;
+
+    transition:
+        border-color .18s ease,
+        box-shadow .18s ease,
+        background .18s ease;
+}
+
+.input{
+    height:46px;
+    padding:0 13px;
+}
+
+.textarea{
+    min-height:88px;
+    resize:vertical;
+    padding:12px 13px;
+    line-height:1.5;
+}
+
+.select{
+    height:46px;
+    padding:0 12px;
+}
+
+.input::placeholder,
+.textarea::placeholder{
+    color:#4e4e4e;
+}
+
+.input:focus,
+.textarea:focus,
+.select:focus{
+    border-color:#555;
+    background:#0e0e0e;
+    box-shadow:0 0 0 3px rgba(255,255,255,.045);
+}
+
+.token-row{
+    display:flex;
+    gap:9px;
+}
+
+.token-row .input{
+    flex:1;
+}
+
+.icon-button{
+    width:46px;
+    height:46px;
+
+    display:grid;
+    place-items:center;
+
+    border:1px solid #282828;
+    border-radius:12px;
+
+    color:#aaa;
+    background:#0b0b0b;
+}
+
+.icon-button:hover{
+    color:#fff;
+    border-color:#444;
+    background:#111;
+}
+
+/* =========================
+   VISIBILITY
+========================= */
+
+.visibility{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:8px;
+}
+
+.visibility-option{
+    position:relative;
+}
+
+.visibility-option input{
+    position:absolute;
+    opacity:0;
+    pointer-events:none;
+}
+
+.visibility-card{
+    min-height:70px;
+
+    display:flex;
+    align-items:center;
+    gap:12px;
+
+    padding:13px;
+
+    border:1px solid #272727;
+    border-radius:13px;
+
+    background:#0b0b0b;
+
+    transition:.18s ease;
+}
+
+.visibility-card:hover{
+    border-color:#3c3c3c;
+    background:#101010;
+}
+
+.visibility-option input:checked + .visibility-card{
+    border-color:#666;
+    background:#151515;
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,.04);
+}
+
+.visibility-icon{
+    width:34px;
+    height:34px;
+
+    display:grid;
+    place-items:center;
+
+    border:1px solid #292929;
+    border-radius:10px;
+
+    background:#101010;
+    color:#aaa;
+}
+
+.visibility-name{
+    font-size:12px;
+    font-weight:750;
+}
+
+.visibility-desc{
+    margin-top:3px;
+    color:#666;
+    font-size:10px;
+}
+
+/* =========================
+   UPLOAD ZONE
+========================= */
+
+.upload-zone{
+    min-height:205px;
+
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+
+    padding:28px;
+
+    text-align:center;
+
+    border:1px dashed #343434;
+    border-radius:16px;
+
+    background:
+        radial-gradient(circle at center,#151515 0,transparent 58%),
+        #0a0a0a;
+
+    transition:.2s ease;
+}
+
+.upload-zone:hover{
+    border-color:#555;
+    background:
+        radial-gradient(circle at center,#181818 0,transparent 58%),
+        #0b0b0b;
+}
+
+.upload-zone.dragover{
+    border-color:#888;
+    background:#111;
+    transform:translateY(-1px);
+}
+
+.upload-icon{
+    width:54px;
+    height:54px;
+
+    display:grid;
+    place-items:center;
+
+    border:1px solid #303030;
+    border-radius:15px;
+
+    background:#111;
+
+    color:#d0d0d0;
+
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.06),
+        0 12px 30px rgba(0,0,0,.25);
+}
+
+.upload-icon svg{
+    width:24px;
+    height:24px;
+}
+
+.upload-title{
+    margin-top:15px;
+
+    font-size:14px;
+    font-weight:800;
+}
+
+.upload-subtitle{
+    margin-top:6px;
+
+    max-width:540px;
+
+    color:#6f6f6f;
+    font-size:11px;
+    line-height:1.6;
+}
+
+.upload-actions{
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:center;
+    gap:8px;
+
+    margin-top:16px;
+}
+
+/* =========================
+   BUTTON
+========================= */
+
+.btn{
+    min-height:42px;
+
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+
+    padding:0 15px;
+
+    border:1px solid #292929;
+    border-radius:11px;
+
+    background:#101010;
+    color:#aaa;
+
+    font-size:12px;
+    font-weight:750;
+
+    transition:
+        transform .15s ease,
+        background .15s ease,
+        border-color .15s ease,
+        color .15s ease,
+        box-shadow .15s ease;
+}
+
+.btn:hover{
+    color:#fff;
+    border-color:#444;
+    background:#161616;
+}
+
+.btn:active{
+    transform:translateY(1px);
+}
+
+.btn.primary{
+    color:#080808;
+    background:#f1f1f1;
+    border-color:#f1f1f1;
+
+    box-shadow:
+        0 8px 24px rgba(0,0,0,.3),
+        inset 0 1px 0 rgba(255,255,255,.8);
+}
+
+.btn.primary:hover{
+    color:#000;
+    background:#fff;
+    border-color:#fff;
+}
+
+.btn.danger{
+    color:#f0b0b0;
+    border-color:#4a2525;
+    background:#170b0b;
+}
+
+.btn.danger:hover{
+    color:#fff;
+    background:#260d0d;
+    border-color:#703434;
+}
+
+.btn:disabled{
+    opacity:.4;
+    cursor:not-allowed;
+    transform:none;
+}
+
+/* =========================
+   OPTIONS
+========================= */
+
+.options{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    margin-top:14px;
+}
+
+.check{
+    position:relative;
+    display:flex;
+    align-items:center;
+    gap:9px;
+
+    min-height:42px;
+
+    padding:0 12px;
+
+    border:1px solid #242424;
+    border-radius:11px;
+
+    background:#0b0b0b;
+    color:#858585;
+
+    font-size:11px;
+
+    cursor:pointer;
+    user-select:none;
+}
+
+.check input{
+    appearance:none;
+    width:15px;
+    height:15px;
+    margin:0;
+
+    border:1px solid #3c3c3c;
+    border-radius:4px;
+
+    background:#0e0e0e;
+}
+
+.check input:checked{
+    border-color:#ddd;
+    background:#ddd;
+    box-shadow:inset 0 0 0 3px #111;
+}
+
+.check:has(input:checked){
+    color:#ddd;
+    border-color:#3a3a3a;
+    background:#111;
+}
+
+/* =========================
+   PROJECT FILES
+========================= */
+
+.project-section{
+    margin-top:18px;
+
+    border:1px solid #202020;
+    border-radius:15px;
+
+    overflow:hidden;
+    background:#0a0a0a;
+}
+
+.project-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+
+    padding:13px 14px;
+
+    border-bottom:1px solid #202020;
+}
+
+.project-heading{
+    display:flex;
+    align-items:center;
+    gap:9px;
+}
+
+.project-heading strong{
+    font-size:12px;
+}
+
+.project-count{
+    min-width:23px;
+    height:22px;
+
+    display:inline-grid;
+    place-items:center;
+
+    padding:0 7px;
+
+    border:1px solid #292929;
+    border-radius:999px;
+
+    color:#aaa;
+    background:#111;
+
+    font-size:10px;
+}
+
+.project-size{
+    color:#666;
+    font-size:10px;
+}
+
+.file-list{
+    max-height:310px;
+    overflow:auto;
+}
+
+.file-list::-webkit-scrollbar,
+.log::-webkit-scrollbar,
+.repo-list::-webkit-scrollbar{
+    width:7px;
+}
+
+.file-list::-webkit-scrollbar-thumb,
+.log::-webkit-scrollbar-thumb,
+.repo-list::-webkit-scrollbar-thumb{
+    background:#292929;
+    border-radius:99px;
+}
+
+.file-row{
+    display:grid;
+    grid-template-columns:28px minmax(0,1fr) auto;
+    align-items:center;
+    gap:9px;
+
+    padding:10px 14px;
+
+    border-bottom:1px solid #161616;
+}
+
+.file-row:last-child{
+    border-bottom:0;
+}
+
+.file-icon{
+    width:27px;
+    height:27px;
+
+    display:grid;
+    place-items:center;
+
+    border:1px solid #222;
+    border-radius:8px;
+
+    background:#101010;
+    color:#777;
+}
+
+.file-icon svg{
+    width:14px;
+    height:14px;
+}
+
+.file-name{
+    min-width:0;
+
+    color:#cfcfcf;
+    font-size:11px;
+
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+}
+
+.file-meta{
+    color:#555;
+    font-size:10px;
+}
+
+/* =========================
+   ACTION BAR
+========================= */
+
+.action-bar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+
+    margin-top:18px;
+}
+
+.action-left,
+.action-right{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+}
+
+/* =========================
+   PROGRESS
+========================= */
+
+.progress-card{
+    margin-top:18px;
+
+    padding:15px;
+
+    border:1px solid #202020;
+    border-radius:14px;
+
+    background:#0a0a0a;
+}
+
+.progress-top{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+
+    margin-bottom:10px;
+}
+
+.progress-label{
+    color:#aaa;
+    font-size:11px;
+    font-weight:700;
+}
+
+.progress-percent{
+    color:#777;
+    font-size:10px;
+    font-variant-numeric:tabular-nums;
+}
+
+.progress-track{
+    height:6px;
+    overflow:hidden;
+
+    border-radius:999px;
+    background:#191919;
+}
+
+.progress-fill{
+    width:0;
+    height:100%;
+
+    background:#eee;
+
+    border-radius:999px;
+
+    transition:width .2s ease;
+}
+
+.progress-detail{
+    margin-top:8px;
+
+    color:#555;
+    font-size:10px;
+
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+}
+
+/* =========================
+   LOG
+========================= */
+
+.log-card{
+    margin-top:14px;
+
+    border:1px solid #202020;
+    border-radius:14px;
+
+    overflow:hidden;
+
+    background:#080808;
+}
+
+.log-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+
+    padding:11px 14px;
+
+    border-bottom:1px solid #1d1d1d;
+
+    color:#777;
+    font-size:10px;
+    font-weight:800;
+
+    text-transform:uppercase;
+    letter-spacing:.1em;
+}
+
+.log{
+    height:170px;
+    overflow:auto;
+
+    padding:13px 14px;
+
+    color:#777;
+
+    font-family:
+        ui-monospace,
+        SFMono-Regular,
+        Menlo,
+        Monaco,
+        Consolas,
+        monospace;
+
+    font-size:10px;
+    line-height:1.75;
+}
+
+.log-line{
+    white-space:pre-wrap;
+    word-break:break-word;
+}
+
+.log-line.success{
+    color:#9de5bf;
+}
+
+.log-line.error{
+    color:#f09b9b;
+}
+
+.log-line.warning{
+    color:#e8c982;
+}
+
+/* =========================
+   ALERT
+========================= */
+
+.alert{
+    display:none;
+
+    margin-top:14px;
+    padding:13px 14px;
+
+    border:1px solid #4b2424;
+    border-radius:12px;
+
+    background:#170909;
+    color:#e3a0a0;
+
+    font-size:11px;
+    line-height:1.6;
+}
+
+.alert.show{
+    display:block;
+}
+
+/* =========================
+   DELETE
+========================= */
+
+.repo-toolbar{
+    display:flex;
+    gap:9px;
+    margin-bottom:13px;
+}
+
+.repo-toolbar .input{
+    flex:1;
+}
+
+.repo-actions{
+    display:flex;
+    flex-wrap:wrap;
+    gap:7px;
+    margin-bottom:12px;
+}
+
+.repo-list{
+    max-height:490px;
+    overflow:auto;
+
+    border:1px solid #202020;
+    border-radius:14px;
+
+    background:#090909;
+}
+
+.repo-item{
+    display:flex;
+    align-items:center;
+    gap:12px;
+
+    padding:13px 14px;
+
+    border-bottom:1px solid #181818;
+
+    transition:.15s ease;
+}
+
+.repo-item:last-child{
+    border-bottom:0;
+}
+
+.repo-item:hover{
+    background:#0f0f0f;
+}
+
+.repo-item.selected{
+    background:#131313;
+}
+
+.repo-checkbox{
+    width:17px;
+    height:17px;
+
+    appearance:none;
+
+    border:1px solid #444;
+    border-radius:5px;
+
+    background:#0c0c0c;
+
+    flex:none;
+}
+
+.repo-checkbox:checked{
+    background:#eee;
+    border-color:#eee;
+
+    box-shadow:inset 0 0 0 3px #111;
+}
+
+.repo-info{
+    min-width:0;
+    flex:1;
+}
+
+.repo-name{
+    color:#ddd;
+    font-size:12px;
+    font-weight:750;
+
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+}
+
+.repo-meta{
+    margin-top:4px;
+
+    display:flex;
+    flex-wrap:wrap;
+    gap:7px;
+
+    color:#555;
+    font-size:10px;
+}
+
+.repo-badge{
+    padding:3px 6px;
+
+    border:1px solid #242424;
+    border-radius:5px;
+
+    background:#0d0d0d;
+}
+
+.repo-link{
+    color:#666;
+    text-decoration:none;
+}
+
+.repo-link:hover{
+    color:#ccc;
+}
+
+.empty-state{
+    min-height:160px;
+
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+
+    gap:8px;
+
+    color:#555;
+    text-align:center;
+}
+
+.empty-state svg{
+    width:25px;
+    height:25px;
+    color:#444;
+}
+
+.empty-state strong{
+    color:#777;
+    font-size:12px;
+}
+
+.empty-state span{
+    max-width:360px;
+    font-size:10px;
+    line-height:1.6;
+}
+
+/* =========================
+   DELETE CONFIRM
+========================= */
+
+.delete-confirm{
+    margin-top:14px;
+    padding:15px;
+
+    border:1px solid #3e2222;
+    border-radius:14px;
+
+    background:#130909;
+}
+
+.delete-confirm-title{
+    color:#e3a0a0;
+    font-size:12px;
+    font-weight:800;
+}
+
+.delete-confirm-desc{
+    margin-top:5px;
+    color:#805c5c;
+    font-size:10px;
+    line-height:1.5;
+}
+
+.confirm-row{
+    display:flex;
+    gap:8px;
+    margin-top:11px;
+}
+
+.confirm-row .input{
+    flex:1;
+}
+
+/* =========================
+   FOOTER
+========================= */
+
+.footer{
+    padding:24px 6px 0;
+
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:15px;
+
+    color:#4c4c4c;
+    font-size:10px;
+}
+
+.footer strong{
+    color:#777;
+}
+
+/* =========================
+   UTILITY
+========================= */
+
+.hidden{
+    display:none !important;
+}
+
+.mono{
+    font-family:
+        ui-monospace,
+        SFMono-Regular,
+        Menlo,
+        Monaco,
+        Consolas,
+        monospace;
+}
+
+@media(max-width:760px){
+
+    .app{
+        width:min(100% - 18px,1180px);
+        padding-top:10px;
+    }
+
+    .topbar{
+        position:relative;
+        top:0;
+        padding:14px;
+        border-radius:16px;
+    }
+
+    .connection{
+        display:none;
+    }
+
+    .hero{
+        padding:38px 4px 22px;
+    }
+
+    .hero h1{
+        font-size:40px;
+    }
+
+    .panel-head{
+        padding:17px;
+    }
+
+    .panel-body{
+        padding:16px;
+    }
+
+    .form-grid{
+        grid-template-columns:1fr;
+    }
+
+    .visibility{
+        grid-template-columns:1fr 1fr;
+    }
+
+    .action-bar{
+        flex-direction:column;
+        align-items:stretch;
+    }
+
+    .action-left,
+    .action-right{
+        width:100%;
+    }
+
+    .action-left .btn,
+    .action-right .btn{
+        flex:1;
+    }
+
+    .footer{
+        flex-direction:column;
+        align-items:flex-start;
+    }
+}
+
+@media(max-width:480px){
+
+    .brand-title{
+        font-size:16px;
+    }
+
+    .brand-subtitle{
+        font-size:9px;
+    }
+
+    .mode-switch{
+        grid-template-columns:1fr;
+    }
+
+    .visibility{
+        grid-template-columns:1fr;
+    }
+
+    .upload-actions{
+        width:100%;
+        flex-direction:column;
+    }
+
+    .upload-actions .btn{
+        width:100%;
+    }
+
+    .repo-toolbar{
+        flex-direction:column;
+    }
+
+    .confirm-row{
+        flex-direction:column;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+    <!-- HEADER -->
+    <header class="topbar">
+
+        <div class="brand">
+
+            <div class="brand-mark">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+                    <path d="M12 3v12"/>
+                    <path d="m7 10 5 5 5-5"/>
+                    <path d="M5 20h14"/>
+                </svg>
+            </div>
+
+            <div class="brand-text">
+                <div class="brand-title">FX Project</div>
+                <div class="brand-subtitle">K-Frame Interface</div>
+            </div>
+
+        </div>
+
+        <div class="connection" id="connectionStatus">
+            <span class="connection-dot"></span>
+            <span id="connectionText">Not connected</span>
+        </div>
+
+    </header>
+
+
+    <!-- HERO -->
+    <section class="hero">
+
+        <div class="eyebrow">
+            <span class="eyebrow-line"></span>
+            GitHub Project Manager
+        </div>
+
+        <h1>Build.<br>Push. Manage.</h1>
+
+        <p>
+            Upload project files directly to GitHub, preserve folder structures,
+            or manage your repositories from one compact interface.
+        </p>
+
+    </section>
+
+
+    <!-- MODE -->
+    <div class="mode-switch">
+
+        <button class="mode-btn active" id="modeUpload">
+
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+                <path d="M12 16V4"/>
+                <path d="m7 9 5-5 5 5"/>
+                <path d="M4 20h16"/>
+            </svg>
+
+            Upload Project
+
+        </button>
+
+        <button class="mode-btn" id="modeDelete">
+
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+                <path d="M4 7h16"/>
+                <path d="M10 11v6"/>
+                <path d="M14 11v6"/>
+                <path d="m9 4 1-2h4l1 2"/>
+                <path d="M6 7l1 14h10l1-14"/>
+            </svg>
+
+            Delete Repositories
+
+        </button>
+
+    </div>
+
+
+    <!-- =========================
+         UPLOAD MODE
+    ========================== -->
+
+    <section id="uploadPanel" class="panel">
+
+        <div class="panel-head">
+
+            <div>
+                <div class="panel-title">Upload Project</div>
+
+                <div class="panel-description">
+                    Upload ZIP, multiple files, folders, or a complete project tree.
+                </div>
+            </div>
+
+        </div>
+
+
+        <div class="panel-body">
+
+            <!-- TOKEN -->
+            <div class="field">
+
+                <label class="field-label">GitHub Personal Access Token</label>
+
+                <div class="token-row">
+
+                    <input
+                        id="token"
+                        class="input mono"
+                        type="password"
+                        autocomplete="off"
+                        placeholder="github_pat_..."
+                    >
+
+                    <button
+                        class="icon-button"
+                        id="toggleToken"
+                        title="Show / hide token"
+                        type="button"
+                    >
+
+                        <svg id="eyeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+                            <path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"/>
+                            <circle cx="12" cy="12" r="2.5"/>
+                        </svg>
+
+                    </button>
+
+                    <button
+                        class="btn"
+                        id="testConnection"
+                        type="button"
+                    >
+
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+                            <path d="M20 11a8 8 0 1 0 1 4"/>
+                            <path d="M20 4v7h-7"/>
+                        </svg>
+
+                        Test
+
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <!-- REPO DATA -->
+            <div class="form-grid" style="margin-top:16px;">
+
+                <div class="field">
+
+                    <label class="field-label">Repository Name</label>
+
+                    <input
+                        id="repoName"
+                        class="input"
+                        type="text"
+                        placeholder="my-project"
+                    >
+
+                </div>
+
+
+                <div class="field">
+
+                    <label class="field-label">Description</label>
+
+                    <input
+                        id="repoDescription"
+                        class="input"
+                        type="text"
+                        placeholder="My awesome project"
+                    >
+
+                </div>
+
+            </div>
+
+
+            <!-- VISIBILITY -->
+            <div class="field" style="margin-top:16px;">
+
+                <label class="field-label">Visibility</label>
+
+                <div class="visibility">
+
+                    <label class="visibility-option">
+
+                        <input
+                            type="radio"
+                            name="visibility"
+                            value="public"
+                            checked
+                        >
+
+                        <div class="visibility-card">
+
+                            <div class="visibility-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+                                    <circle cx="12" cy="12" r="9"/>
+                                    <path d="M3 12h18"/>
+                                    <path d="M12 3c3 3 4 6 4 9s-1 6-4 9c-3-3-4-6-4-9s1-6 4-9Z"/>
+                                </svg>
+                            </div>
+
+                            <div>
+                                <div class="visibility-name">Public</div>
+                                <div class="visibility-desc">Visible to everyone</div>
+                            </div>
+
+                        </div>
+
+                    </label>
+
+
+                    <label class="visibility-option">
+
+                        <input
+                            type="radio"
+                            name="visibility"
+                            value="private"
+                        >
+
+                        <div class="visibility-card">
+
+                            <div class="visibility-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+                                    <rect x="5" y="10" width="14" height="10" rx="2"/>
+                                    <path d="M8 10V7a4 4 0 0 1 8 0v3"/>
+                                </svg>
+                            </div>
+
+                            <div>
+                                <div class="visibility-name">Private</div>
+                                <div class="visibility-desc">Only you can access</div>
+                            </div>
+
+                        </div>
+
+                    </label>
+
+                </div>
+
+            </div>
+
+
+            <!-- UPLOAD ZONE -->
+            <div
+                class="upload-zone"
+                id="uploadZone"
+                style="margin-top:18px;"
+            >
+
+                <div class="upload-icon">
+
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+                        <path d="M12 16V4"/>
+                        <path d="m7 9 5-5 5 5"/>
+                        <path d="M4 20h16"/>
+                    </svg>
+
+                </div>
+
+                <div class="upload-title">
+                    Drop your project here
+                </div>
+
+                <div class="upload-subtitle">
+                    ZIP, individual files, multiple files, or complete folders.
+                    Existing paths and nested folders will be preserved.
+                </div>
+
+
+                <div class="upload-actions">
+
+                    <button
+                        class="btn"
+                        id="chooseFiles"
+                        type="button"
+                    >
+
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+                            <path d="M4 5a2 2 0 0 1 2-2h5l2 2h5a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5Z"/>
+                        </svg>
+
+                        Files / ZIP
+
+                    </button>
+
+
+                    <button
+                        class="btn"
+                        id="chooseFolder"
+                        type="button"
+                    >
+
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+                            <path d="M3 6a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6Z"/>
+                        </svg>
+
+                        Folder
+
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <!-- HIDDEN INPUTS -->
+            <input
+                id="fileInput"
+                type="file"
+                multiple
+                hidden
+            >
+
+            <input
+                id="folderInput"
+                type="file"
+                webkitdirectory
+                directory
+                multiple
+                hidden
+            >
+
+
+            <!-- OPTIONS -->
+            <div class="options">
+
+                <label class="check">
+
+                    <input
+                        id="stripRoot"
+                        type="checkbox"
+                        checked
+                    >
+
+                    Rapikan Root Folder
+
+                </label>
+
+
+                <label class="check">
+
+                    <input
+                        id="skipSystem"
+                        type="checkbox"
+                        checked
+                    >
+
+                    Lewati File Sistem
+
+                </label>
+
+            </div>
+
+
+            <!-- FILE LIST -->
+            <div
+                id="projectSection"
+                class="project-section hidden"
+            >
+
+                <div class="project-head">
+
+                    <div class="project-heading">
+
+                        <strong>Project Files</strong>
+
+                        <span
+                            id="projectCount"
+                            class="project-count"
+                        >
+                            0
+                        </span>
+
+                    </div>
+
+                    <div
+                        id="projectSize"
+                        class="project-size"
+                    >
+                        0 B
+                    </div>
+
+                </div>
+
+
+                <div
+                    id="fileList"
+                    class="file-list"
+                ></div>
+
+            </div>
+
+
+            <!-- ACTION -->
+            <div class="action-bar">
+
+                <div class="action-left">
+
+                    <button
+                        class="btn primary"
+                        id="uploadBtn"
+                        type="button"
+                    >
+
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+                            <path d="M12 16V4"/>
+                            <path d="m7 9 5-5 5 5"/>
+                            <path d="M4 20h16"/>
+                        </svg>
+
+                        Create & Upload
+
+                    </button>
+
+
+                    <button
+                        class="btn"
+                        id="clearProject"
+                        type="button"
+                    >
+
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+                            <path d="M4 7h16"/>
+                            <path d="M10 11v6"/>
+                            <path d="M14 11v6"/>
+                            <path d="m9 4 1-2h4l1 2"/>
+                            <path d="M6 7l1 14h10l1-14"/>
+                        </svg>
+
+                        Clear Project
+
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <!-- PROGRESS -->
+            <div
+                id="progressCard"
+                class="progress-card hidden"
+            >
+
+                <div class="progress-top">
+
+                    <div
+                        id="progressLabel"
+                        class="progress-label"
+                    >
+                        Preparing...
+                    </div>
+
+                    <div
+                        id="progressPercent"
+                        class="progress-percent"
+                    >
+                        0%
+                    </div>
+
+                </div>
+
+                <div class="progress-track">
+                    <div
+                        id="progressFill"
+                        class="progress-fill"
+                    ></div>
+                </div>
+
+                <div
+                    id="progressDetail"
+                    class="progress-detail"
+                >
+                    Waiting...
+                </div>
+
+            </div>
+
+
+            <!-- ALERT -->
+            <div
+                id="alert"
+                class="alert"
+            ></div>
+
+
+            <!-- LOG -->
+            <div class="log-card">
+
+                <div class="log-head">
+
+                    <span>Activity Log</span>
+
+                    <span id="logStatus">
+                        Idle
+                    </span>
+
+                </div>
+
+                <div
+                    id="log"
+                    class="log"
+                >
+
+                    <div class="log-line">
+                        Ready.
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- =========================
+         DELETE MODE
+    ========================== -->
+
+    <section
+        id="deletePanel"
+        class="panel hidden"
+    >
+
+        <div class="panel-head">
+
+            <div>
+                <div class="panel-title">Repository Manager</div>
+
+                <div class="panel-description">
+                    Load repositories accessible by the authenticated account.
+                </div>
+            </div>
+
+        </div>
+
+
+        <div class="panel-body">
+
+            <div class="field">
+
+                <label class="field-label">
+                    GitHub Personal Access Token
+                </label>
+
+                <div class="token-row">
+
+                    <input
+                        id="deleteToken"
+                        class="input mono"
+                        type="password"
+                        autocomplete="off"
+                        placeholder="github_pat_..."
+                    >
+
+                    <button
+                        class="icon-button"
+                        id="toggleDeleteToken"
+                        type="button"
+                    >
+
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+                            <path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"/>
+                            <circle cx="12" cy="12" r="2.5"/>
+                        </svg>
+
+                    </button>
+
+                    <button
+                        class="btn"
+                        id="loadRepos"
+                        type="button"
+                    >
+
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+                            <path d="M20 11a8 8 0 1 0 1 4"/>
+                            <path d="M20 4v7h-7"/>
+                        </svg>
+
+                        Load
+
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <div style="margin-top:18px;">
+
+                <div class="repo-toolbar">
+
+                    <input
+                        id="repoSearch"
+                        class="input"
+                        type="search"
+                        placeholder="Search repositories..."
+                    >
+
+                </div>
+
+
+                <div class="repo-actions">
+
+                    <button
+                        class="btn"
+                        id="selectVisible"
+                        type="button"
+                    >
+                        Select Visible
+                    </button>
+
+                    <button
+                        class="btn"
+                        id="clearSelection"
+                        type="button"
+                    >
+                        Clear Selection
+                    </button>
+
+                    <button
+                        class="btn danger"
+                        id="deleteSelected"
+                        type="button"
+                    >
+
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+                            <path d="M4 7h16"/>
+                            <path d="M10 11v6"/>
+                            <path d="M14 11v6"/>
+                            <path d="m9 4 1-2h6"/>
+                            <path d="M6 7l1 14h10l1-14"/>
+                        </svg>
+
+                        Delete Selected
+
+                    </button>
+
+                </div>
+
+
+                <div
+                    id="repoList"
+                    class="repo-list"
+                >
+
+                    <div class="empty-state">
+
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+                            <path d="M4 5a2 2 0 0 1 2-2h5l2 2h5a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5Z"/>
+                        </svg>
+
+                        <strong>No repositories loaded</strong>
+
+                        <span>
+                            Enter a token and press Load to retrieve repositories.
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+                <div
+                    id="deleteConfirm"
+                    class="delete-confirm hidden"
+                >
+
+                    <div class="delete-confirm-title">
+                        Permanent deletion confirmation
+                    </div>
+
+                    <div class="delete-confirm-desc">
+                        This action cannot be undone. Type DELETE to continue.
+                    </div>
+
+                    <div class="confirm-row">
+
+                        <input
+                            id="deletePhrase"
+                            class="input mono"
+                            type="text"
+                            placeholder="DELETE"
+                            autocomplete="off"
+                        >
+
+                        <button
+                            class="btn danger"
+                            id="confirmDelete"
+                            type="button"
+                            disabled
+                        >
+                            Confirm Delete
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div
+                id="deleteAlert"
+                class="alert"
+            ></div>
+
+        </div>
+
+    </section>
+
+
+    <footer class="footer">
+
+        <div>
+            <strong>FX Project</strong> · K-Frame Interface
+        </div>
+
+        <div>
+            GitHub REST API
+        </div>
+
+    </footer>
+
+</div>
+
+
+<script>
+/* =========================================================
+   FX PROJECT
+   GitHub Project Manager
+========================================================= */
+
+const API = "https://api.github.com";
+
+let uploadToken = "";
+let deleteToken = "";
+
+let currentUser = null;
+let repositories = [];
+
+let projectFiles = [];
+let uploadBusy = false;
+let deleteBusy = false;
+
+
+/* =========================================================
+   DOM
+========================================================= */
+
+const $ = id => document.getElementById(id);
+
+
+/* =========================================================
+   UTILITIES
+========================================================= */
+
+function escapeHtml(value){
+    return String(value ?? "")
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+}
+
+
+function sleep(ms){
+    return new Promise(resolve => setTimeout(resolve,ms));
+}
+
+
+function formatBytes(bytes){
+
+    if(!Number.isFinite(bytes) || bytes <= 0){
+        return "0 B";
+    }
+
+    const units = [
+        "B",
+        "KB",
+        "MB",
+        "GB"
+    ];
+
+    const index = Math.min(
+        Math.floor(Math.log(bytes) / Math.log(1024)),
+        units.length - 1
+    );
+
+    return `${(bytes / Math.pow(1024,index)).toFixed(index === 0 ? 0 : 2)} ${units[index]}`;
+}
+
+
+function formatDate(date){
+    if(!date) return "Unknown";
+
+    try{
+        return new Intl.DateTimeFormat(
+            "id-ID",
+            {
+                dateStyle:"medium",
+                timeStyle:"short"
+            }
+        ).format(new Date(date));
+    }catch{
+        return date;
+    }
+}
+
+
+function timestamp(){
+
+    return new Date().toLocaleTimeString(
+        "id-ID",
+        {
+            hour:"2-digit",
+            minute:"2-digit",
+            second:"2-digit"
+        }
+    );
+
+}
+
+
+/* =========================================================
+   LOGGING
+========================================================= */
+
+function clearLog(){
+
+    $("log").innerHTML = "";
+
+}
+
+
+function log(message,type=""){
+
+    const line = document.createElement("div");
+
+    line.className = `log-line ${type}`;
+
+    line.textContent = `[${timestamp()}] ${message}`;
+
+    $("log").appendChild(line);
+
+    $("log").scrollTop = $("log").scrollHeight;
+
+}
+
+
+function setLogStatus(text){
+
+    $("logStatus").textContent = text;
+
+}
+
+
+/* =========================================================
+   ALERT
+========================================================= */
+
+function showAlert(message){
+
+    const box = $("alert");
+
+    box.textContent = message;
+
+    box.classList.add("show");
+
+}
+
+
+function hideAlert(){
+
+    $("alert").classList.remove("show");
+    $("alert").textContent = "";
+
+}
+
+
+function showDeleteAlert(message){
+
+    const box = $("deleteAlert");
+
+    box.textContent = message;
+
+    box.classList.add("show");
+
+}
+
+
+function hideDeleteAlert(){
+
+    $("deleteAlert").classList.remove("show");
+    $("deleteAlert").textContent = "";
+
+}
+
+
+/* =========================================================
+   PROGRESS
+========================================================= */
+
+function showProgress(){
+
+    $("progressCard").classList.remove("hidden");
+
+}
+
+
+function hideProgress(){
+
+    $("progressCard").classList.add("hidden");
+
+}
+
+
+function setProgress(percent,label,detail=""){
+
+    const safePercent = Math.max(
+        0,
+        Math.min(100,Number(percent) || 0)
+    );
+
+    $("progressFill").style.width = `${safePercent}%`;
+
+    $("progressPercent").textContent =
+        `${Math.round(safePercent)}%`;
+
+    $("progressLabel").textContent =
+        label || "Working...";
+
+    $("progressDetail").textContent =
+        detail || "";
+
+}
+
+
+/* =========================================================
+   API
+========================================================= */
+
+async function api(
+    path,
+    options = {},
+    tokenOverride = null
+){
+
+    const token =
+        tokenOverride ??
+        uploadToken;
+
+    if(!token){
+        throw new Error("GitHub token belum diisi.");
+    }
+
+    const response = await fetch(
+        API + path,
+        {
+            ...options,
+
+            headers:{
+                "Accept":"application/vnd.github+json",
+                "Authorization":`Bearer ${token}`,
+                "X-GitHub-Api-Version":"2022-11-28",
+
+                ...(options.headers || {})
+            }
+        }
+    );
+
+
+    let data = null;
+
+    const text = await response.text();
+
+    if(text){
+
+        try{
+            data = JSON.parse(text);
+        }catch{
+            data = text;
+        }
+
+    }
+
+
+    if(!response.ok){
+
+        const message =
+            data?.message ||
+            data?.error ||
+            `GitHub API error ${response.status}`;
+
+        const error = new Error(message);
+
+        error.status = response.status;
+        error.data = data;
+
+        throw error;
+    }
+
+
+    return data;
+
+}
+
+
+/* =========================================================
+   TOKEN
+========================================================= */
+
+$("toggleToken").addEventListener(
+    "click",
+    () => {
+
+        const input = $("token");
+
+        input.type =
+            input.type === "password"
+                ? "text"
+                : "password";
+
+    }
+);
+
+
+$("toggleDeleteToken").addEventListener(
+    "click",
+    () => {
+
+        const input = $("deleteToken");
+
+        input.type =
+            input.type === "password"
+                ? "text"
+                : "password";
+
+    }
+);
+
+
+$("token").addEventListener(
+    "input",
+    () => {
+
+        uploadToken = $("token").value.trim();
+
+    }
+);
+
+
+$("deleteToken").addEventListener(
+    "input",
+    () => {
+
+        deleteToken = $("deleteToken").value.trim();
+
+    }
+);
+
+
+/* =========================================================
+   CONNECTION
+========================================================= */
+
+function setConnection(
+    online,
+    text
+){
+
+    const status = $("connectionStatus");
+
+    status.classList.toggle(
+        "online",
+        online
+    );
+
+    $("connectionText").textContent =
+        text;
+
+}
+
+
+async function testConnection(){
+
+    hideAlert();
+
+    uploadToken = $("token").value.trim();
+
+    if(!uploadToken){
+
+        showAlert(
+            "Masukkan GitHub Personal Access Token terlebih dahulu."
+        );
+
+        return;
+    }
+
+
+    try{
+
+        $("testConnection").disabled = true;
+
+        setConnection(
+            false,
+            "Connecting..."
+        );
+
+        log("Testing GitHub authentication...");
+
+        const user = await api(
+            "/user",
+            {},
+            uploadToken
+        );
+
+        currentUser = user;
+
+        setConnection(
+            true,
+            `@${user.login}`
+        );
+
+        log(
+            `Authenticated: @${user.login}`,
+            "success"
+        );
+
+    }catch(error){
+
+        setConnection(
+            false,
+            "Authentication failed"
+        );
+
+        log(
+            `ERROR → ${error.message}`,
+            "error"
+        );
+
+        showAlert(
+            `GitHub authentication failed: ${error.message}`
+        );
+
+    }finally{
+
+        $("testConnection").disabled = false;
+
+    }
+
+}
+
+
+$("testConnection").addEventListener(
+    "click",
+    testConnection
+);
+
+
+/* =========================================================
+   FILE FILTER
+========================================================= */
+
+function isSystemFile(path){
+
+    const normalized =
+        path.replaceAll("\\","/");
+
+    const parts =
+        normalized.split("/");
+
+    return parts.some(
+        part =>
+            part === "__MACOSX" ||
+            part === ".DS_Store" ||
+            part === "Thumbs.db" ||
+            part === ".git" ||
+            part === ".gitignore~"
+    );
+
+}
+
+
+function normalizePath(path){
+
+    let value =
+        String(path || "")
+            .replaceAll("\\","/")
+            .replace(/^\/+/,"")
+            .replace(/\/+/g,"/");
+
+    const parts = [];
+
+    for(const part of value.split("/")){
+
+        if(!part || part === "."){
+            continue;
+        }
+
+        if(part === ".."){
+
+            parts.pop();
+
+            continue;
+        }
+
+        parts.push(part);
+
+    }
+
+    return parts.join("/");
+
+}
+
+
+/* =========================================================
+   ZIP
+========================================================= */
+
+async function extractZip(file){
+
+    if(typeof JSZip === "undefined"){
+        throw new Error(
+            "JSZip gagal dimuat. Periksa koneksi internet."
+        );
+    }
+
+    const zip =
+        await JSZip.loadAsync(file);
+
+    const result = [];
+
+    const entries =
+        Object.values(zip.files);
+
+    for(const entry of entries){
+
+        if(entry.dir){
+            continue;
+        }
+
+        const path =
+            normalizePath(entry.name);
+
+        if(!path){
+            continue;
+        }
+
+        if($("skipSystem").checked && isSystemFile(path)){
+            continue;
+        }
+
+        const bytes =
+            await entry.async("uint8array");
+
+        result.push({
+            path,
+            bytes,
+            size:bytes.byteLength
+        });
+
+    }
+
+    return result;
+
+}
+
+
+/* =========================================================
+   NORMAL FILES
+========================================================= */
+
+async function addNormalFiles(files){
+
+    const result = [];
+
+    for(const file of files){
+
+        let path =
+            file.webkitRelativePath ||
+            file.name;
+
+        path =
+            normalizePath(path);
+
+        if(!path){
+            continue;
+        }
+
+        if($("skipSystem").checked && isSystemFile(path)){
+            continue;
+        }
+
+        const buffer =
+            await file.arrayBuffer();
+
+        const bytes =
+            new Uint8Array(buffer);
+
+        result.push({
+            path,
+            bytes,
+            size:bytes.byteLength
+        });
+
+    }
+
+    return result;
+
+}
+
+
+/* =========================================================
+   ROOT FOLDER CLEANUP
+========================================================= */
+
+function stripSingleRoot(files){
+
+    if(!files.length){
+        return files;
+    }
+
+    const roots =
+        files
+            .map(file => file.path.split("/")[0])
+            .filter(Boolean);
+
+    if(!roots.length){
+        return files;
+    }
+
+    const firstRoot = roots[0];
+
+    const allSameRoot =
+        roots.every(root => root === firstRoot);
+
+    if(!allSameRoot){
+        return files;
+    }
+
+    const hasNestedPath =
+        files.some(
+            file => file.path.includes("/")
+        );
+
+    if(!hasNestedPath){
+        return files;
+    }
+
+    return files.map(file => {
+
+        const prefix =
+            firstRoot + "/";
+
+        if(file.path.startsWith(prefix)){
+
+            return {
+                ...file,
+                path:file.path.slice(prefix.length)
+            };
+
+        }
+
+        return file;
+
+    });
+
+}
+
+
+/* =========================================================
+   FILE DEDUPE
+========================================================= */
+
+function dedupeFiles(files){
+
+    const map = new Map();
+
+    for(const file of files){
+
+        const path =
+            normalizePath(file.path);
+
+        if(!path){
+            continue;
+        }
+
+        map.set(
+            path,
+            {
+                ...file,
+                path
+            }
+        );
+
+    }
+
+    return Array.from(
+        map.values()
+    ).sort(
+        (a,b) =>
+            a.path.localeCompare(
+                b.path,
+                undefined,
+                {
+                    numeric:true,
+                    sensitivity:"base"
+                }
+            )
+    );
+
+}
+
+
+/* =========================================================
+   PROCESS FILES
+========================================================= */
+
+async function processFiles(fileList){
+
+    hideAlert();
+
+    const files =
+        Array.from(fileList || []);
+
+    if(!files.length){
+        return;
+    }
+
+    showProgress();
+
+    setProgress(
+        2,
+        "Preparing project...",
+        "Reading selected files"
+    );
+
+    log(
+        `Preparing ${files.length} input item(s)...`
+    );
+
+
+    try{
+
+        let output = [];
+
+        for(
+            let index = 0;
+            index < files.length;
+            index++
+        ){
+
+            const file =
+                files[index];
+
+            const isZip =
+                file.name
+                    .toLowerCase()
+                    .endsWith(".zip") ||
+                file.type === "application/zip" ||
+                file.type === "application/x-zip-compressed";
+
+
+            setProgress(
+                5 + (index / files.length) * 15,
+                "Reading project...",
+                file.name
+            );
+
+
+            if(isZip){
+
+                log(
+                    `Extracting ZIP → ${file.name}`
+                );
+
+                const extracted =
+                    await extractZip(file);
+
+                output.push(
+                    ...extracted
+                );
+
+                log(
+                    `Extracted ${extracted.length} file(s) from ${file.name}`,
+                    "success"
+                );
+
+            }else{
+
+                const normal =
+                    await addNormalFiles([file]);
+
+                output.push(
+                    ...normal
+                );
+
+            }
+
+        }
+
+
+        if($("stripRoot").checked){
+
+            output =
+                stripSingleRoot(output);
+
+        }
+
+
+        output =
+            dedupeFiles(output);
+
+
+        projectFiles =
+            output;
+
+
+        renderProjectFiles();
+
+
+        const totalSize =
+            projectFiles.reduce(
+                (sum,file) =>
+                    sum + file.size,
+                0
+            );
+
+
+        setProgress(
+            20,
+            "Project ready",
+            `${projectFiles.length} file(s) · ${formatBytes(totalSize)}`
+        );
+
+
+        log(
+            `Project ready: ${projectFiles.length} file(s), ${formatBytes(totalSize)}`,
+            "success"
+        );
+
+
+    }catch(error){
+
+        log(
+            `ERROR → ${error.message}`,
+            "error"
+        );
+
+        showAlert(
+            `Failed to process project: ${error.message}`
+        );
+
+        setProgress(
+            0,
+            "Failed",
+            error.message
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   FILE PICKERS
+========================================================= */
+
+$("chooseFiles").addEventListener(
+    "click",
+    () => $("fileInput").click()
+);
+
+
+$("chooseFolder").addEventListener(
+    "click",
+    () => $("folderInput").click()
+);
+
+
+$("fileInput").addEventListener(
+    "change",
+    event => {
+
+        processFiles(
+            event.target.files
+        );
+
+        event.target.value = "";
+
+    }
+);
+
+
+$("folderInput").addEventListener(
+    "change",
+    event => {
+
+        processFiles(
+            event.target.files
+        );
+
+        event.target.value = "";
+
+    }
+);
+
+
+/* =========================================================
+   DRAG & DROP
+========================================================= */
+
+const uploadZone =
+    $("uploadZone");
+
+
+[
+    "dragenter",
+    "dragover"
+].forEach(eventName => {
+
+    uploadZone.addEventListener(
+        eventName,
+        event => {
+
+            event.preventDefault();
+            event.stopPropagation();
+
+            uploadZone.classList.add(
+                "dragover"
+            );
+
+        }
+    );
+
+});
+
+
+[
+    "dragleave",
+    "drop"
+].forEach(eventName => {
+
+    uploadZone.addEventListener(
+        eventName,
+        event => {
+
+            event.preventDefault();
+            event.stopPropagation();
+
+            uploadZone.classList.remove(
+                "dragover"
+            );
+
+        }
+    );
+
+});
+
+
+uploadZone.addEventListener(
+    "drop",
+    event => {
+
+        processFiles(
+            event.dataTransfer.files
+        );
+
+    }
+);
+
+
+/* =========================================================
+   FILE ICON
+========================================================= */
+
+function fileIcon(path){
+
+    const ext =
+        path.includes(".")
+            ? path.split(".").pop().toLowerCase()
+            : "";
+
+    let type = "file";
+
+    if(
+        ["html","htm"].includes(ext)
+    ){
+        type = "code";
+    }
+
+    if(
+        ["js","mjs","cjs","ts","tsx","jsx"].includes(ext)
+    ){
+        type = "script";
+    }
+
+    if(
+        ["css","scss","sass","less"].includes(ext)
+    ){
+        type = "style";
+    }
+
+    if(
+        ["json","yaml","yml","xml"].includes(ext)
+    ){
+        type = "data";
+    }
+
+    if(
+        ["png","jpg","jpeg","gif","webp","svg","ico"].includes(ext)
+    ){
+        type = "image";
+    }
+
+
+    const icons = {
+
+        file:`
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+                <path d="M6 3h8l4 4v14H6z"/>
+                <path d="M14 3v5h4"/>
+            </svg>
+        `,
+
+        code:`
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+                <path d="m8 8-4 4 4 4"/>
+                <path d="m16 8 4 4-4 4"/>
+                <path d="m14 5-4 14"/>
+            </svg>
+        `,
+
+        script:`
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+                <path d="m8 8-4 4 4 4"/>
+                <path d="m16 8 4 4-4 4"/>
+                <path d="m14 5-4 14"/>
+            </svg>
+        `,
+
+        style:`
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+                <path d="M4 5h16"/>
+                <path d="M4 12h16"/>
+                <path d="M4 19h10"/>
+            </svg>
+        `,
+
+        data:`
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+                <path d="M6 4h12v16H6z"/>
+                <path d="M9 8h6"/>
+                <path d="M9 12h6"/>
+                <path d="M9 16h4"/>
+            </svg>
+        `,
+
+        image:`
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+                <rect x="4" y="4" width="16" height="16" rx="2"/>
+                <circle cx="9" cy="9" r="1.5"/>
+                <path d="m5 17 5-5 3 3 2-2 4 4"/>
+            </svg>
+        `
+
+    };
+
+    return icons[type] || icons.file;
+
+}
+
+
+/* =========================================================
+   RENDER PROJECT
+========================================================= */
+
+function renderProjectFiles(){
+
+    const section =
+        $("projectSection");
+
+    const list =
+        $("fileList");
+
+
+    if(!projectFiles.length){
+
+        section.classList.add("hidden");
+
+        list.innerHTML = "";
+
+        $("projectCount").textContent = "0";
+        $("projectSize").textContent = "0 B";
+
+        return;
+    }
+
+
+    section.classList.remove("hidden");
+
+
+    const totalSize =
+        projectFiles.reduce(
+            (sum,file) =>
+                sum + file.size,
+            0
+        );
+
+
+    $("projectCount").textContent =
+        projectFiles.length;
+
+    $("projectSize").textContent =
+        formatBytes(totalSize);
+
+
+    list.innerHTML =
+        projectFiles.map(file => `
+
+            <div class="file-row">
+
+                <div class="file-icon">
+                    ${fileIcon(file.path)}
+                </div>
+
+                <div class="file-name" title="${escapeHtml(file.path)}">
+                    ${escapeHtml(file.path)}
+                </div>
+
+                <div class="file-meta">
+                    ${formatBytes(file.size)}
+                </div>
+
+            </div>
+
+        `).join("");
+
+}
+
+
+/* =========================================================
+   CLEAR PROJECT
+========================================================= */
+
+$("clearProject").addEventListener(
+    "click",
+    () => {
+
+        projectFiles = [];
+
+        renderProjectFiles();
+
+        hideProgress();
+        hideAlert();
+
+        clearLog();
+
+        log(
+            "Project cleared."
+        );
+
+        setLogStatus("Idle");
+
+    }
+);
+
+
+/* =========================================================
+   BASE64
+========================================================= */
+
+function uint8ToBase64(bytes){
+
+    let binary = "";
+
+    const chunkSize = 0x8000;
+
+    for(
+        let index = 0;
+        index < bytes.length;
+        index += chunkSize
+    ){
+
+        const chunk =
+            bytes.subarray(
+                index,
+                Math.min(
+                    index + chunkSize,
+                    bytes.length
+                )
+            );
+
+        binary += String.fromCharCode(
+            ...chunk
+        );
+
+    }
+
+    return btoa(binary);
+
+}
+
+
+/* =========================================================
+   REPOSITORY
+========================================================= */
+
+async function createRepository(){
+
+    const name =
+        $("repoName").value.trim();
+
+    const description =
+        $("repoDescription").value.trim();
+
+    const visibility =
+        document.querySelector(
+            'input[name="visibility"]:checked'
+        )?.value || "public";
+
+
+    if(!name){
+
+        throw new Error(
+            "Repository name belum diisi."
+        );
+
+    }
+
+
+    log(
+        `Creating repository → ${name}`
+    );
+
+
+    const repo =
+        await api(
+            "/user/repos",
+            {
+                method:"POST",
+
+                body:JSON.stringify({
+
+                    name,
+
+                    description,
+
+                    private:
+                        visibility === "private",
+
+                    auto_init:true
+
+                })
+            }
+        );
+
+
+    log(
+        `Repository created: ${repo.full_name}`,
+        "success"
+    );
+
+
+    return repo;
+
+}
+
+
+/* =========================================================
+   GET EXISTING REPOSITORY
+========================================================= */
+
+async function getExistingRepository(name){
+
+    if(!currentUser){
+
+        currentUser =
+            await api(
+                "/user"
+            );
+
+    }
+
+
+    return await api(
+        `/repos/${encodeURIComponent(currentUser.login)}/${encodeURIComponent(name)}`
+    );
+
+}
+
+
+/* =========================================================
+   GET OR CREATE
+========================================================= */
+
+async function getOrCreateRepository(){
+
+    const name =
+        $("repoName").value.trim();
+
+    if(!name){
+
+        throw new Error(
+            "Repository name belum diisi."
+        );
+
+    }
+
+
+    try{
+
+        return await createRepository();
+
+    }catch(error){
+
+        if(error.status !== 422){
+            throw error;
+        }
+
+
+        log(
+            `Repository "${name}" already exists. Checking access...`,
+            "warning"
+        );
+
+
+        const existing =
+            await getExistingRepository(name);
+
+
+        if(
+            !currentUser ||
+            existing.owner.login.toLowerCase() !==
+            currentUser.login.toLowerCase()
+        ){
+
+            throw new Error(
+                "Repository sudah ada dan bukan milik akun yang sedang login."
+            );
+
+        }
+
+
+        log(
+            `Using existing repository: ${existing.full_name}`,
+            "warning"
+        );
+
+
+        return existing;
+
+    }
+
+}
+
+
+/* =========================================================
+   GET BRANCH
+========================================================= */
+
+async function getBranchInfo(
+    owner,
+    repo,
+    branch
+){
+
+    return await api(
+        `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/branches/${encodeURIComponent(branch)}`
+    );
+
+}
+
+
+/* =========================================================
+   GET CURRENT STATE
+========================================================= */
+
+async function getCurrentGitState(
+    owner,
+    repo,
+    branch
+){
+
+    const branchInfo =
+        await getBranchInfo(
+            owner,
+            repo,
+            branch
+        );
+
+
+    const commitSha =
+        branchInfo.commit.sha;
+
+
+    const commit =
+        await api(
+            `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/git/commits/${commitSha}`
+        );
+
+
+    return {
+
+        branch,
+
+        commitSha,
+
+        treeSha:
+            commit.tree.sha
+
+    };
+
+}
+
+
+/* =========================================================
+   INITIALIZE EMPTY EXISTING REPO
+========================================================= */
+
+async function initializeEmptyRepository(
+    owner,
+    repo,
+    branch,
+    firstFile
+){
+
+    if(!firstFile){
+
+        throw new Error(
+            "Project tidak memiliki file untuk initialize repository."
+        );
+
+    }
+
+
+    log(
+        `Repository is empty. Initializing with → ${firstFile.path}`,
+        "warning"
+    );
+
+
+    const encoded =
+        uint8ToBase64(
+            firstFile.bytes
+        );
+
+
+    const result =
+        await api(
+            `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contents/${firstFile.path.split("/").map(encodeURIComponent).join("/")}`,
+            {
+                method:"PUT",
+
+                body:JSON.stringify({
+
+                    message:
+                        "Initialize project",
+
+                    content:
+                        encoded,
+
+                    branch
+
+                })
+            }
+        );
+
+
+    log(
+        `Repository initialized: ${firstFile.path}`,
+        "success"
+    );
+
+
+    return result;
+
+}
+
+
+/* =========================================================
+   ENSURE BRANCH
+========================================================= */
+
+async function ensureRepositoryReady(
+    repo,
+    files
+){
+
+    const owner =
+        repo.owner.login;
+
+    const name =
+        repo.name;
+
+    const branch =
+        repo.default_branch || "main";
+
+
+    try{
+
+        return await getCurrentGitState(
+            owner,
+            name,
+            branch
+        );
+
+    }catch(error){
+
+        /*
+         * 409/404 here usually means the repository has
+         * no branch yet.
+         */
+
+        if(
+            error.status !== 404 &&
+            error.status !== 409
+        ){
+
+            throw error;
+
+        }
+
+    }
+
+
+    await initializeEmptyRepository(
+        owner,
+        name,
+        branch,
+        files[0]
+    );
+
+
+    return await getCurrentGitState(
+        owner,
+        name,
+        branch
+    );
+
+}
+
+
+/* =========================================================
+   CREATE BLOB
+========================================================= */
+
+async function createBlob(
+    owner,
+    repo,
+    file
+){
+
+    if(file.size > 100 * 1024 * 1024){
+
+        throw new Error(
+            `File terlalu besar untuk upload via GitHub API: ${file.path} (${formatBytes(file.size)})`
+        );
+
+    }
+
+
+    const encoded =
+        uint8ToBase64(
+            file.bytes
+        );
+
+
+    const result =
+        await api(
+            `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/git/blobs`,
+            {
+                method:"POST",
+
+                body:JSON.stringify({
+
+                    content:
+                        encoded,
+
+                    encoding:
+                        "base64"
+
+                })
+            }
+        );
+
+
+    return result.sha;
+
+}
+
+
+/* =========================================================
+   CREATE ALL BLOBS
+========================================================= */
+
+async function createAllBlobs(
+    owner,
+    repo,
+    files
+){
+
+    const tree = [];
+
+    for(
+        let index = 0;
+        index < files.length;
+        index++
+    ){
+
+        const file =
+            files[index];
+
+
+        const percent =
+            20 +
+            (index / Math.max(files.length,1)) * 50;
+
+
+        setProgress(
+            percent,
+            `Uploading ${index + 1}/${files.length}`,
+            file.path
+        );
+
+
+        log(
+            `Blob ${index + 1}/${files.length} → ${file.path}`
+        );
+
+
+        const sha =
+            await createBlob(
+                owner,
+                repo,
+                file
+            );
+
+
+        tree.push({
+
+            path:file.path,
+
+            mode:"100644",
+
+            type:"blob",
+
+            sha
+
+        });
+
+    }
+
+
+    return tree;
+
+}
+
+
+/* =========================================================
+   CREATE TREE
+========================================================= */
+
+async function createTree(
+    owner,
+    repo,
+    baseTree,
+    tree
+){
+
+    setProgress(
+        73,
+        "Building Git tree...",
+        `${tree.length} project file(s)`
+    );
+
+
+    const result =
+        await api(
+            `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/git/trees`,
+            {
+                method:"POST",
+
+                body:JSON.stringify({
+
+                    base_tree:
+                        baseTree,
+
+                    tree
+
+                })
+            }
+        );
+
+
+    return result.sha;
+
+}
+
+
+/* =========================================================
+   CREATE COMMIT
+========================================================= */
+
+async function createCommit(
+    owner,
+    repo,
+    treeSha,
+    parentSha
+){
+
+    setProgress(
+        82,
+        "Creating commit...",
+        "Building project commit"
+    );
+
+
+    const result =
+        await api(
+            `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/git/commits`,
+            {
+                method:"POST",
+
+                body:JSON.stringify({
+
+                    message:
+                        "Upload project via FX Project",
+
+                    tree:
+                        treeSha,
+
+                    parents:
+                        parentSha
+                            ? [parentSha]
+                            : []
+
+                })
+            }
+        );
+
+
+    return result.sha;
+
+}
+
+
+/* =========================================================
+   UPDATE BRANCH
+========================================================= */
+
+async function updateBranch(
+    owner,
+    repo,
+    branch,
+    commitSha
+){
+
+    setProgress(
+        91,
+        "Updating branch...",
+        `refs/heads/${branch}`
+    );
+
+
+    await api(
+        `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/git/refs/heads/${encodeURIComponent(branch)}`,
+        {
+            method:"PATCH",
+
+            body:JSON.stringify({
+
+                sha:
+                    commitSha,
+
+                force:
+                    false
+
+            })
+        }
+    );
+
+}
+
+
+/* =========================================================
+   DELETE BOOTSTRAP README
+========================================================= */
+
+function projectHasRootReadme(files){
+
+    return files.some(
+        file =>
+            file.path.toLowerCase() === "readme.md"
+    );
+
+}
+
+
+/* =========================================================
+   UPLOAD PROJECT
+========================================================= */
+
+async function uploadProject(){
+
+    if(uploadBusy){
+        return;
+    }
+
+
+    hideAlert();
+
+
+    uploadToken =
+        $("token").value.trim();
+
+
+    if(!uploadToken){
+
+        showAlert(
+            "Masukkan GitHub Personal Access Token."
+        );
+
+        return;
+    }
+
+
+    if(!projectFiles.length){
+
+        showAlert(
+            "Pilih file, ZIP, atau folder project terlebih dahulu."
+        );
+
+        return;
+    }
+
+
+    const repoInput =
+        $("repoName").value.trim();
+
+
+    if(!repoInput){
+
+        showAlert(
+            "Repository name belum diisi."
+        );
+
+        $("repoName").focus();
+
+        return;
+    }
+
+
+    uploadBusy = true;
+
+
+    $("uploadBtn").disabled = true;
+    $("clearProject").disabled = true;
+
+    showProgress();
+
+    clearLog();
+
+    setLogStatus("Uploading");
+
+
+    try{
+
+        if(!currentUser){
+
+            log(
+                "Authenticating GitHub..."
+            );
+
+            currentUser =
+                await api(
+                    "/user"
+                );
+
+            setConnection(
+                true,
+                `@${currentUser.login}`
+            );
+
+            log(
+                `Authenticated: @${currentUser.login}`,
+                "success"
+            );
+
+        }
+
+
+        /*
+         * STEP 1
+         * Create repo or reuse existing repo.
+         */
+
+        setProgress(
+            5,
+            "Preparing repository...",
+            repoInput
+        );
+
+
+        const repo =
+            await getOrCreateRepository();
+
+
+        const owner =
+            repo.owner.login;
+
+        const branch =
+            repo.default_branch || "main";
+
+
+        /*
+         * STEP 2
+         * Make sure repository has a commit/tree.
+         *
+         * New repository:
+         * auto_init=true already gives us a branch.
+         *
+         * Existing empty repository:
+         * initialize using first actual project file.
+         */
+
+        setProgress(
+            12,
+            "Checking repository...",
+            `${owner}/${repo.name}`
+        );
+
+
+        let state =
+            await ensureRepositoryReady(
+                repo,
+                projectFiles
+            );
+
+
+        /*
+         * If the repository was empty and the first file
+         * was already uploaded by initializeEmptyRepository(),
+         * don't upload it a second time.
+         */
+
+        let filesToUpload =
+            projectFiles;
+
+
+        try{
+
+            const existingTree =
+                await api(
+                    `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo.name)}/git/trees/${state.treeSha}?recursive=1`
+                );
+
+
+            const existingPaths =
+                new Set(
+                    (existingTree.tree || [])
+                        .filter(item => item.type === "blob")
+                        .map(item => item.path)
+                );
+
+
+            /*
+             * We only skip a project file if its exact path
+             * already exists in the current commit AND this
+             * current commit was produced by initializing the
+             * empty repository.
+             *
+             * For normal existing repositories we still upload
+             * files so that their contents are replaced.
+             */
+
+        }catch{
+
+            /*
+             * Tree inspection isn't mandatory for upload.
+             */
+
+        }
+
+
+        /*
+         * STEP 3
+         * Upload blobs.
+         */
+
+        const treeEntries =
+            await createAllBlobs(
+                owner,
+                repo.name,
+                filesToUpload
+            );
+
+
+        /*
+         * New repositories created with auto_init=true
+         * contain GitHub's bootstrap README.
+         *
+         * If the project itself doesn't have a root README.md,
+         * remove the bootstrap README from the resulting tree.
+         */
+
+        if(
+            !projectHasRootReadme(projectFiles)
+        ){
+
+            treeEntries.push({
+
+                path:"README.md",
+
+                mode:"100644",
+
+                type:"blob",
+
+                sha:null
+
+            });
+
+            log(
+                "Bootstrap README will be removed.",
+                "warning"
+            );
+
+        }
+
+
+        /*
+         * STEP 4
+         * Merge project tree with current repository tree.
+         */
+
+        const treeSha =
+            await createTree(
+                owner,
+                repo.name,
+                state.treeSha,
+                treeEntries
+            );
+
+
+        /*
+         * STEP 5
+         * Create commit with current commit as parent.
+         */
+
+        const commitSha =
+            await createCommit(
+                owner,
+                repo.name,
+                treeSha,
+                state.commitSha
+            );
+
+
+        /*
+         * STEP 6
+         * Move branch to new commit.
+         */
+
+        await updateBranch(
+            owner,
+            repo.name,
+            branch,
+            commitSha
+        );
+
+
+        setProgress(
+            100,
+            "Upload complete",
+            `${owner}/${repo.name} · ${branch}`
+        );
+
+
+        setLogStatus("Complete");
+
+
+        log(
+            `Upload complete → ${owner}/${repo.name}`,
+            "success"
+        );
+
+        log(
+            `Branch updated → ${branch}`,
+            "success"
+        );
+
+
+        /*
+         * Give user a clickable GitHub URL in log.
+         */
+
+        log(
+            `Repository → https://github.com/${owner}/${repo.name}`,
+            "success"
+        );
+
+
+        $("connectionText").textContent =
+            `@${owner}`;
+
+
+    }catch(error){
+
+        setLogStatus("Error");
+
+
+        log(
+            `ERROR → ${error.message}`,
+            "error"
+        );
+
+
+        if(error.status){
+
+            log(
+                `HTTP ${error.status}`,
+                "error"
+            );
+
+        }
+
+
+        showAlert(
+            `Upload failed: ${error.message}`
+        );
+
+
+        setProgress(
+            0,
+            "Upload failed",
+            error.message
+        );
+
+
+    }finally{
+
+        uploadBusy = false;
+
+        $("uploadBtn").disabled = false;
+        $("clearProject").disabled = false;
+
+    }
+
+}
+
+
+$("uploadBtn").addEventListener(
+    "click",
+    uploadProject
+);
+
+
+/* =========================================================
+   MODE SWITCH
+========================================================= */
+
+function setMode(mode){
+
+    const upload =
+        mode === "upload";
+
+    $("uploadPanel")
+        .classList.toggle(
+            "hidden",
+            !upload
+        );
+
+    $("deletePanel")
+        .classList.toggle(
+            "hidden",
+            upload
+        );
+
+    $("modeUpload")
+        .classList.toggle(
+            "active",
+            upload
+        );
+
+    $("modeDelete")
+        .classList.toggle(
+            "active",
+            !upload
+        );
+
+}
+
+
+$("modeUpload").addEventListener(
+    "click",
+    () => setMode("upload")
+);
+
+
+$("modeDelete").addEventListener(
+    "click",
+    () => setMode("delete")
+);
+
+
+/* =========================================================
+   LOAD REPOSITORIES
+========================================================= */
+
+async function loadRepositories(){
+
+    hideDeleteAlert();
+
+    deleteToken =
+        $("deleteToken").value.trim();
+
+
+    if(!deleteToken){
+
+        showDeleteAlert(
+            "Masukkan GitHub Personal Access Token."
+        );
+
+        return;
+    }
+
+
+    $("loadRepos").disabled = true;
+
+
+    try{
+
+        const user =
+            await api(
+                "/user",
+                {},
+                deleteToken
+            );
+
+
+        setConnection(
+            true,
+            `@${user.login}`
+        );
+
+
+        let all = [];
+
+        let page = 1;
+
+
+        while(true){
+
+            const repos =
+                await api(
+                    `/user/repos?visibility=all&affiliation=owner,collaborator,organization_member&per_page=100&page=${page}&sort=updated&direction=desc`,
+                    {},
+                    deleteToken
+                );
+
+
+            all.push(
+                ...repos
+            );
+
+
+            if(repos.length < 100){
+                break;
+            }
+
+
+            page++;
+
+
+            if(page > 20){
+                break;
+            }
+
+        }
+
+
+        repositories =
+            all;
+
+
+        renderRepositories();
+
+
+    }catch(error){
+
+        showDeleteAlert(
+            `Failed to load repositories: ${error.message}`
+        );
+
+    }finally{
+
+        $("loadRepos").disabled = false;
+
+    }
+
+}
+
+
+$("loadRepos").addEventListener(
+    "click",
+    loadRepositories
+);
+
+
+/* =========================================================
+   RENDER REPOSITORIES
+========================================================= */
+
+function renderRepositories(){
+
+    const list =
+        $("repoList");
+
+    const query =
+        $("repoSearch")
+            .value
+            .trim()
+            .toLowerCase();
+
+
+    const filtered =
+        repositories.filter(repo => {
+
+            if(!query){
+                return true;
+            }
+
+            return (
+                repo.name
+                    .toLowerCase()
+                    .includes(query)
+                ||
+                (repo.description || "")
+                    .toLowerCase()
+                    .includes(query)
+            );
+
+        });
+
+
+    if(!filtered.length){
+
+        list.innerHTML = `
+
+            <div class="empty-state">
+
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+                    <circle cx="11" cy="11" r="7"/>
+                    <path d="m20 20-4-4"/>
+                </svg>
+
+                <strong>
+                    No repositories found
+                </strong>
+
+                <span>
+                    Try another search or reload your repositories.
+                </span>
+
+            </div>
+
+        `;
+
+        return;
+    }
+
+
+    list.innerHTML =
+        filtered.map(repo => `
+
+            <label
+                class="repo-item"
+                data-name="${escapeHtml(repo.name.toLowerCase())}"
+            >
+
+                <input
+                    class="repo-checkbox"
+                    type="checkbox"
+                    value="${escapeHtml(repo.full_name)}"
+                >
+
+
+                <div class="repo-info">
+
+                    <div class="repo-name">
+                        ${escapeHtml(repo.name)}
+                    </div>
+
+                    <div class="repo-meta">
+
+                        <span class="repo-badge">
+                            ${repo.private ? "Private" : "Public"}
+                        </span>
+
+                        <span>
+                            ${escapeHtml(
+                                repo.default_branch || "main"
+                            )}
+                        </span>
+
+                        <span>
+                            ${escapeHtml(
+                                formatDate(repo.updated_at)
+                            )}
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+                <a
+                    class="repo-link"
+                    href="${escapeHtml(repo.html_url)}"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title="Open on GitHub"
+                >
+
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+                        <path d="M14 5h5v5"/>
+                        <path d="M19 5 11 13"/>
+                        <path d="M19 13v5a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h5"/>
+                    </svg>
+
+                </a>
+
+            </label>
+
+        `).join("");
+
+
+    list
+        .querySelectorAll(".repo-checkbox")
+        .forEach(box => {
+
+            box.addEventListener(
+                "change",
+                () => {
+
+                    box
+                        .closest(".repo-item")
+                        ?.classList.toggle(
+                            "selected",
+                            box.checked
+                        );
+
+                }
+            );
+
+        });
+
+}
+
+
+/* =========================================================
+   SEARCH
+========================================================= */
+
+$("repoSearch").addEventListener(
+    "input",
+    renderRepositories
+);
+
+
+/* =========================================================
+   SELECT VISIBLE
+========================================================= */
+
+$("selectVisible").addEventListener(
+    "click",
+    () => {
+
+        $("repoList")
+            .querySelectorAll(
+                ".repo-item:not(.empty-state) .repo-checkbox"
+            )
+            .forEach(box => {
+
+                box.checked = true;
+
+                box
+                    .closest(".repo-item")
+                    ?.classList.add("selected");
+
+            });
+
+    }
+);
+
+
+/* =========================================================
+   CLEAR SELECTION
+========================================================= */
+
+$("clearSelection").addEventListener(
+    "click",
+    () => {
+
+        $("repoList")
+            .querySelectorAll(
+                ".repo-checkbox"
+            )
+            .forEach(box => {
+
+                box.checked = false;
+
+                box
+                    .closest(".repo-item")
+                    ?.classList.remove("selected");
+
+            });
+
+        $("deleteConfirm")
+            .classList.add("hidden");
+
+        $("deletePhrase").value = "";
+
+        $("confirmDelete").disabled = true;
+
+    }
+);
+
+
+/* =========================================================
+   DELETE SELECTED
+========================================================= */
+
+$("deleteSelected").addEventListener(
+    "click",
+    () => {
+
+        const selected =
+            Array.from(
+                $("repoList")
+                    .querySelectorAll(
+                        ".repo-checkbox:checked"
+                    )
+            );
+
+
+        if(!selected.length){
+
+            showDeleteAlert(
+                "Pilih minimal satu repository."
+            );
+
+            return;
+
+        }
+
+
+        hideDeleteAlert();
+
+        $("deleteConfirm")
+            .classList.remove("hidden");
+
+        $("deletePhrase").focus();
+
+    }
+);
+
+
+/* =========================================================
+   DELETE PHRASE
+========================================================= */
+
+$("deletePhrase").addEventListener(
+    "input",
+    () => {
+
+        $("confirmDelete").disabled =
+            $("deletePhrase")
+                .value
+                .trim()
+                .toUpperCase() !== "DELETE";
+
+    }
+);
+
+
+/* =========================================================
+   DELETE REPOSITORIES
+========================================================= */
+
+async function deleteSelectedRepositories(){
+
+    if(deleteBusy){
+        return;
+    }
+
+
+    deleteToken =
+        $("deleteToken").value.trim();
+
+
+    if(!deleteToken){
+
+        showDeleteAlert(
+            "Masukkan GitHub Personal Access Token."
+        );
+
+        return;
+    }
+
+
+    if(
+        $("deletePhrase")
+            .value
+            .trim()
+            .toUpperCase() !== "DELETE"
+    ){
+
+        return;
+    }
+
+
+    const selected =
+        Array.from(
+            $("repoList")
+                .querySelectorAll(
+                    ".repo-checkbox:checked"
+                )
+        );
+
+
+    if(!selected.length){
+
+        showDeleteAlert(
+            "Tidak ada repository yang dipilih."
+        );
+
+        return;
+    }
+
+
+    deleteBusy = true;
+
+    $("confirmDelete").disabled = true;
+    $("deleteSelected").disabled = true;
+
+
+    try{
+
+        for(
+            let index = 0;
+            index < selected.length;
+            index++
+        ){
+
+            const fullName =
+                selected[index].value;
+
+            const [owner,repo] =
+                fullName.split("/");
+
+
+            showDeleteAlert(
+                `Deleting ${index + 1}/${selected.length}: ${fullName}`
+            );
+
+
+            await api(
+                `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}`,
+                {
+                    method:"DELETE"
+                },
+                deleteToken
+            );
+
+        }
+
+
+        repositories =
+            repositories.filter(
+                repo =>
+                    !selected.some(
+                        box =>
+                            box.value === repo.full_name
+                    )
+            );
+
+
+        $("deleteConfirm")
+            .classList.add("hidden");
+
+        $("deletePhrase").value = "";
+
+        renderRepositories();
+
+
+        showDeleteAlert(
+            `${selected.length} repository berhasil dihapus.`
+        );
+
+
+    }catch(error){
+
+        showDeleteAlert(
+            `Delete failed: ${error.message}`
+        );
+
+    }finally{
+
+        deleteBusy = false;
+
+        $("confirmDelete").disabled = false;
+        $("deleteSelected").disabled = false;
+
+    }
+
+}
+
+
+$("confirmDelete").addEventListener(
+    "click",
+    deleteSelectedRepositories
+);
+
+
+/* =========================================================
+   INITIAL STATE
+========================================================= */
+
+setMode("upload");
+
+setConnection(
+    false,
+    "Not connected"
+);
+
+</script>
+
+</body>
+</html>
